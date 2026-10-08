@@ -1,36 +1,36 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# 게시판 (Next.js + TypeScript + shadcn/ui)
 
-## Getting Started
+회원가입/로그인 후 글을 쓰고, 누구나 글을 읽을 수 있는 간단한 게시판입니다.
 
-First, run the development server:
+## 실행
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+`.env.local`에 아래 두 값이 필요합니다.
+
+```
+DATABASE_URL=postgresql://...neon.tech/neondb?sslmode=require   # Neon 연결 문자열
+SESSION_SECRET=...                                               # openssl rand -base64 32
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+```bash
+npm install
+npm run db:init   # 최초 1회: users, posts 테이블 생성 (db/schema.sql)
+npm run dev
+```
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+http://localhost:3000 접속.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## 구성
 
-## Learn More
+- **DB**: [Neon](https://neon.tech) Postgres + `@neondatabase/serverless` (HTTP 드라이버, 태그드 템플릿으로 SQL 인젝션 방지)
+- **인증**: bcrypt 비밀번호 해시 + `jose` JWT를 httpOnly 쿠키에 저장 (7일)
+- **검증**: zod (Server Actions에서 처리)
 
-To learn more about Next.js, take a look at the following resources:
+| 경로 | 설명 |
+| --- | --- |
+| `/` | 홈 |
+| `/signup`, `/login` | 회원가입 / 로그인 (로그인 상태면 `/posts`로 이동) |
+| `/posts` | 글 목록 (누구나) |
+| `/posts/[id]` | 글 읽기 (누구나) |
+| `/posts/new` | 글쓰기 (로그인 필요) |
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+주요 파일: `src/lib/db.ts`, `src/lib/session.ts`, `src/app/actions/auth.ts`, `src/app/actions/posts.ts`
